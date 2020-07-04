@@ -7,6 +7,8 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
 import com.sedmelluq.discord.lavaplayer.track.playback.AudioFrame;
 import net.dv8tion.jda.api.audio.AudioSendHandler;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Message;
+import org.kanliam.bot.Main;
 
 import javax.annotation.Nullable;
 import java.nio.ByteBuffer;
@@ -14,7 +16,8 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 
 public class TrackScheduler extends AudioEventAdapter implements AutoCloseable, AudioSendHandler {
-    private AudioPlayer player;
+
+    private final AudioPlayer player;
     private Deque<Song> queue = new ArrayDeque<>();
     private Song currentSong;
     private AudioFrame lastFrame;
@@ -27,14 +30,10 @@ public class TrackScheduler extends AudioEventAdapter implements AutoCloseable, 
 
     public void playSong(Song song){
         if(isPlaying()){
-            String name = song.getTrack().getInfo().title;
             enqueue(song);
         } else {
             currentSong = song;
             getPlayer().playTrack(song.getTrack());
-
-            //this.player.playTrack(song.getTrack());
-            // delete this if everything works
         }
     }
 
@@ -47,6 +46,9 @@ public class TrackScheduler extends AudioEventAdapter implements AutoCloseable, 
         queue.add(newSong);
     }
 
+    public void emptyQueue(){
+        queue = new ArrayDeque<>();
+    }
 
     @Override
     public void onTrackStart(AudioPlayer player, AudioTrack track) {
@@ -55,40 +57,61 @@ public class TrackScheduler extends AudioEventAdapter implements AutoCloseable, 
 
     @Override
     public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
-        super.onTrackEnd(player, track, endReason);
-        queue.pop();
+
         if(queue.isEmpty()){
             currentSong.getChannel().sendMessage("Queue is empty, leaving channel").queue();
             currentSong.getChannel().getGuild().getAudioManager().closeAudioConnection();
+            try {
+                Main.getTrackSchedulerManager().destroyScheduler(currentSong.getChannel().getGuild());
+            } catch (Exception e) {
+                System.out.println("Exception in onTruckEnd, TrackScheduler");
+                e.printStackTrace();
+            }
         } else {
-            this.player.playTrack(queue.getFirst().getTrack());
+            this.player.playTrack(queue.pop().getTrack());
         }
+        super.onTrackEnd(player, track, endReason);
     }
 
     @Override
     public void onTrackStuck(AudioPlayer player, AudioTrack track, long thresholdMs) {
+        System.out.println("stuck in onTruckStuck, TrackScheduler");
         super.onTrackStuck(player, track, thresholdMs);
     }
 
     @Override
     public void close() throws Exception {
-        this.player.destroy();
+        if(this.player != null){
+            this.player.destroy();
+        }
     }
 
-    public void sendQueue(){
-
-        StringBuilder songList = new StringBuilder();
-        int i = 1;
-        for (Song song : queue) {
-            long duration = song.getTrack().getDuration();
-            String b = String.format("%d:%02d",(duration/1000)/60, (duration/1000)%60);
-            songList.append(String.format("%d) %s\n with the duration of [%s]\n", i++, song.getName(), b));
+    public void sendQueue(Message message){
+        if(this.player != null && this.queue != null && this.currentSong != null) {
+            if(!queue.isEmpty()){
+                StringBuilder songList = new StringBuilder();
+                int i = 1;
+                for (Song song : queue) {
+                    long duration = song.getTrack().getDuration();
+                    String b = String.format("%d:%02d",(duration/1000)/60, (duration/1000)%60);
+                    songList.append(String.format("%d) %s ==> Duration of [%s]\n", i++, song.getName(), b));
+                }
+                message.getChannel().sendMessage(songList.toString()).queue();
+            } else {
+                message.getChannel().sendMessage("Queue is empty").queue();
+            }
+        } else if (!message.getGuild().getAudioManager().isConnected()){
+            message.getTextChannel().sendMessage("The queue is empty, the bot isn't even connected").queue();
         }
-        currentSong.getChannel().sendMessage(songList.toString()).queue();
     }
 
     public AudioPlayer getPlayer() {
         return player;
+    }
+
+
+    public Deque<Song> getQueue() {
+        return queue;
     }
 
     @Override

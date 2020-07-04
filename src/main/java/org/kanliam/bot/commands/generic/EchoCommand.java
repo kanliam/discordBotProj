@@ -2,7 +2,6 @@ package org.kanliam.bot.commands.generic;
 
 import org.kanliam.bot.commands.Command;
 import org.kanliam.bot.commands.CommandContext;
-
 import java.util.Arrays;
 
 public class EchoCommand extends Command {

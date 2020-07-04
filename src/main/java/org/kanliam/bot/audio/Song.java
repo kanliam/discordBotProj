@@ -34,31 +34,15 @@ public class Song {
     }
 
 
-
     //public void sendEnqueued(){
     //    channel.sendMessage(String.format(("The song %s has been added to the queue"), getName())).queue();
     //}
-
-    public void nowPlaying(){
-        channel.sendMessage("Now playing " + getName()).queue();
-    }
-
 
     /**
      * returns the name of the video
      * @return the name of the video
      */
     public String getName(){
-        return this.getTrack().getInfo().title;
-    }
-
-
-
-    /**
-     * returns the name of the channel of the video
-     * @return the name of the channel of the video
-     */
-    public String getAuthor(){
-        return this.getTrack().getInfo().author;
+        return getTrack().getInfo().title;
     }
 }

@@ -1,6 +1,5 @@
 package org.kanliam.bot.audio;
 
-import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
@@ -18,28 +17,26 @@ public class AudioLoadResultHandler implements com.sedmelluq.discord.lavaplayer.
         this.message = ctx.getMsg();
     }
 
-    //@Override
+    @Override
     public void trackLoaded(AudioTrack track) {
         Song song = new Song(track, ctx.getMsg().getTextChannel(), ctx.getMsg().getAuthor(), trackScheduler);
         trackScheduler.playSong(song);
     }
 
-    //@Override
+    @Override
     public void playlistLoaded(AudioPlaylist playlist) {
-        for (AudioTrack track : playlist.getTracks()) {
-            Song song = new Song(track, ctx.getMsg().getTextChannel(), ctx.getMsg().getAuthor(), trackScheduler);
-            trackScheduler.playSong(song);
-            message.getTextChannel().sendMessage(String.format("Adding %s to the queue", song.getName())).queue();
-        }
+        Song song = new Song(playlist.getTracks().get(0), ctx.getMsg().getTextChannel(), ctx.getMsg().getAuthor(), trackScheduler);
+        trackScheduler.playSong(song);
     }
 
-    //@Override
+    @Override
     public void noMatches() {
         ctx.getMsg().getTextChannel().sendMessage("There are no results").queue();
     }
 
-    //@Override
+    @Override
     public void loadFailed(FriendlyException exception) {
+        System.out.println("Error in loadFailed, AudioLoadResultHandler");
         exception.printStackTrace();
     }
 }

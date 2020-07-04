@@ -20,6 +20,7 @@ public class TrackSchedulerManager {
         return map.get(guild.getId());
     }
 
+
     public void destroyScheduler (Guild guild) throws Exception{
         if(map.containsKey(guild.getId())){
             map.get(guild.getId()).close();

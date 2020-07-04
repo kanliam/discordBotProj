@@ -6,13 +6,12 @@ import org.kanliam.bot.commands.CommandContext;
 
 public class QueueCommand extends Command {
 
-
     public QueueCommand() {
         super("queue");
     }
 
     @Override
     public void exec(CommandContext ctx) {
-        Main.getTrackSchedulerManager().getScheduler(ctx.getMsg().getGuild()).sendQueue();
+        Main.getTrackSchedulerManager().getScheduler(ctx.getMsg().getGuild()).sendQueue(ctx.getMsg());
     }
 }

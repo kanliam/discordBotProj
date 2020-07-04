@@ -9,6 +9,7 @@ import org.kanliam.bot.util.CommandLoader;
 import javax.annotation.Nonnull;
 public class EventManager extends ListenerAdapter {
     private CommandManager cmm = new CommandManager();
+    private Message message;
 
     public EventManager() {
         CommandLoader.load(cmm);
@@ -19,5 +20,10 @@ public class EventManager extends ListenerAdapter {
         super.onMessageReceived(event);
         Message message = event.getMessage();
         cmm.handle(message);
+        this.message = message;
+    }
+
+    public Message getMessage() {
+        return message;
     }
 }
